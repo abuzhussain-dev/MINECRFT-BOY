@@ -77,7 +77,7 @@ export default function App() {
       3. { "action": "chat", "message": "string" }
       4. { "action": "stop" }
       
-      Return ONLY valid JSON.`;
+      Note: Use goto for all movements. Use mine for resource gathering. Use chat for communication.`;
 
       const result = await ai.models.generateContent({
         model: "gemini-3-flash-preview",

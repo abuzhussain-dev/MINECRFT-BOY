@@ -8,6 +8,8 @@ import mineflayer from "mineflayer";
 import { pathfinder, Movements, goals } from "mineflayer-pathfinder";
 import collectBlock from "mineflayer-collectblock";
 import minecraftData from "minecraft-data";
+import pvp from "mineflayer-pvp";
+import armorManager from "mineflayer-armor-manager";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -64,6 +66,8 @@ async function startServer() {
         // Load Plugins
         bot.loadPlugin(pathfinder);
         bot.loadPlugin(collectBlock.plugin);
+        bot.loadPlugin(pvp.plugin);
+        bot.loadPlugin(armorManager);
 
         const mcData = minecraftData(bot.version);
 
