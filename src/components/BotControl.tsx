@@ -142,7 +142,7 @@ export default function BotControl({ onConnect, onDisconnect, onSendChat, onSend
           
           <div className="mt-6 pt-6 border-t border-white/5 relative z-10">
             <p className="text-[9px] uppercase font-bold text-gray-600 mb-3 tracking-widest">Automation Modules</p>
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-2 mb-4">
                {['Mine Coal', 'Mine Iron', 'Follow Me', 'Stop All'].map(task => (
                  <button 
                    key={task}
@@ -152,6 +152,20 @@ export default function BotControl({ onConnect, onDisconnect, onSendChat, onSend
                    {task}
                  </button>
                ))}
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <button 
+                onClick={() => onSendAI("Enable Auto-Grind")}
+                className="py-2 bg-blue-900/20 text-blue-400 border border-blue-900/30 text-[10px] uppercase font-bold tracking-widest hover:bg-blue-900/40"
+              >
+                AUTO_GRIND
+              </button>
+              <button 
+                onClick={() => onSendAI("Enable Guard Mode")}
+                className="py-2 bg-red-900/20 text-red-500 border border-red-900/30 text-[10px] uppercase font-bold tracking-widest hover:bg-red-900/40"
+              >
+                GUARD_DEFENSE
+              </button>
             </div>
           </div>
         </div>

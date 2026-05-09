@@ -76,8 +76,11 @@ export default function App() {
       2. { "action": "mine", "block": "block_name", "count": number }
       3. { "action": "chat", "message": "string" }
       4. { "action": "stop" }
+      5. { "action": "special", "type": "auto-grind" | "guard-mode", "enabled": boolean }
       
-      Note: Use goto for all movements. Use mine for resource gathering. Use chat for communication.`;
+      Note: Use goto for all movements. Use mine for resource gathering. Use chat for communication. 
+      Use special with type "auto-grind" to start/stop the automatic ore search.
+      Use special with type "guard-mode" to start/stop active mob defense.`;
 
       const result = await ai.models.generateContent({
         model: "gemini-3-flash-preview",
@@ -90,7 +93,11 @@ export default function App() {
       const jsonMatch = responseText.match(/\{.*\}/s);
       if (jsonMatch) {
          const cmd = JSON.parse(jsonMatch[0]);
-         socket.emit('bot:action', cmd);
+         if (cmd.action === "special") {
+            socket.emit(`bot:${cmd.type}`, cmd.enabled);
+         } else {
+            socket.emit('bot:action', cmd);
+         }
       } else {
         setLogs(prev => [...prev, `[${new Date().toLocaleTimeString()}] NEURAL_FAULT: Could not parse AI response as JSON.`].slice(-100));
       }

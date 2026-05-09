@@ -1,20 +1,44 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
+# Minecraft AI Bot Commander
 
-# Run and deploy your AI Studio app
+An AI-powered dashboard for Mineflayer bots with Gemini AI integration.
 
-This contains everything you need to run your app locally.
+## Termux Setup Instructions
 
-View your app in AI Studio: https://ai.studio/apps/c7ad612f-d418-4b54-8302-a9ac0d1bcacf
+1. **Install Node.js:**
+   ```bash
+   pkg update && pkg upgrade
+   pkg install nodejs
+   ```
 
-## Run Locally
+2. **Clone the Repository:**
+   ```bash
+   git clone https://github.com/abuzhussain-dev/MINECRFT-BOY.git
+   cd MINECRFT-BOY
+   ```
 
-**Prerequisites:**  Node.js
+3. **Install Dependencies:**
+   ```bash
+   npm install
+   ```
 
+4. **Environment Setup:**
+   Create a `.env` file:
+   ```bash
+   nano .env
+   ```
+   Add your Gemini API key:
+   ```env
+   GEMINI_API_KEY=your_actual_key_here
+   ```
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+5. **Run the Dashboard:**
+   ```bash
+   npm run dev
+   ```
+   Then open `http://localhost:3000` in your phone's browser.
+
+## Features
+- **Neural Command:** Use natural language to tell the bot what to do.
+- **Auto-Grind:** Bot automatically searches and mines nearby ores.
+- **Guard Mode:** Uses `mineflayer-pvp` to defend against hostile mobs/players.
+- **Sophisticated Dashboard:** Real-time telemetry and logs.

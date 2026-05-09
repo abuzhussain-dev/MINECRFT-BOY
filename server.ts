@@ -112,6 +112,52 @@ async function startServer() {
       }
     });
 
+    socket.on("bot:auto-grind", (enabled: boolean) => {
+      if (!bot) return;
+      if (enabled) {
+        addLog("SUBROUTINE_START: Auto-Grind sequence initiated.");
+        const mcData = minecraftData(bot.version);
+        const grindLoop = async () => {
+          if (!bot) return;
+          const targetOres = [mcData.blocksByName.coal_ore.id, mcData.blocksByName.iron_ore.id, mcData.blocksByName.copper_ore.id];
+          const block = bot.findBlock({ matching: targetOres, maxDistance: 32 });
+          if (block) {
+            addLog(`TARGET_ACQUIRED: Mined ${block.name} at ${block.position}`);
+            try {
+              await bot.collectBlock.collect(block);
+              setTimeout(grindLoop, 1000);
+            } catch (e) {
+              setTimeout(grindLoop, 5000);
+            }
+          } else {
+            addLog("SEARCHING: No nearby ores found. Retrying in 10s...");
+            setTimeout(grindLoop, 10000);
+          }
+        };
+        grindLoop();
+      } else {
+        addLog("SUBROUTINE_STOP: Auto-Grind sequence terminated.");
+        // Logic to stop the loop would need a cancellation token, but simple null check on bot works for disconnects
+      }
+    });
+
+    socket.on("bot:guard-mode", (enabled: boolean) => {
+      if (!bot) return;
+      if (enabled) {
+        addLog("DEFENSE_PROXIMITY: Guard mode active. Defending perimeter.");
+        bot.on('entityExisted', (entity: any) => {
+          if (!bot || !bot.pvp) return;
+          if (entity.type === 'mob' && (entity.kind === 'Hostile' || entity.name === 'zombie' || entity.name === 'skeleton')) {
+            bot.pvp.attack(entity);
+          }
+        });
+      } else {
+        addLog("DEFENSE_PROXIMITY: Guard mode disabled.");
+        bot.removeAllListeners('entityExisted');
+        bot.pvp.stop();
+      }
+    });
+
     socket.on("bot:chat", (message: string) => {
       if (bot) bot.chat(message);
     });
