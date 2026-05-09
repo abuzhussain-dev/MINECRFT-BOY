@@ -1,0 +1,6 @@
+{
+  "name": "Minecraft AI Bot Commander",
+  "description": "An AI-powered dashboard to control and script Minecraft bots using Mineflayer and Gemini AI.",
+  "requestFramePermissions": [],
+  "majorCapabilities": []
+}
