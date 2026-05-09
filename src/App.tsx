@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { LayoutDashboard, Activity, Heart, Utensils, MessageSquare, Bot } from 'lucide-react';
+import { GoogleGenAI } from "@google/genai";
 import LogView from './components/LogView';
 import BotControl from './components/BotControl';
 
@@ -15,6 +16,12 @@ export default function App() {
     username: '',
     xp: { level: 0 }
   });
+
+  const ai = useMemo(() => {
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) return null;
+    return new GoogleGenAI({ apiKey });
+  }, []);
 
   useEffect(() => {
     const newSocket = io();
@@ -53,8 +60,44 @@ export default function App() {
     socket?.emit('bot:chat', message);
   };
 
-  const handleSendAI = (instruction: string) => {
-    socket?.emit('bot:ai-command', instruction);
+  const handleSendAI = async (instruction: string) => {
+    if (!ai || !socket) return;
+    
+    // Add local log so user knows it's working
+    setLogs(prev => [...prev, `[${new Date().toLocaleTimeString()}] NEURAL_PROCESSING: "${instruction}"`].slice(-100));
+
+    try {
+      const prompt = `You are a Minecraft Bot Controller. Translate instructions into JSON actions.
+      Instruction: "${instruction}"
+      Bot Position: ${JSON.stringify(telemetry.pos)}
+      
+      Supported actions:
+      1. { "action": "goto", "x": number, "y": number, "z": number }
+      2. { "action": "mine", "block": "block_name", "count": number }
+      3. { "action": "chat", "message": "string" }
+      4. { "action": "stop" }
+      
+      Return ONLY valid JSON.`;
+
+      const result = await ai.models.generateContent({
+        model: "gemini-3-flash-preview",
+        contents: prompt,
+      });
+
+      const responseText = result.text;
+      if (!responseText) throw new Error("Empty AI response");
+
+      const jsonMatch = responseText.match(/\{.*\}/s);
+      if (jsonMatch) {
+         const cmd = JSON.parse(jsonMatch[0]);
+         socket.emit('bot:action', cmd);
+      } else {
+        setLogs(prev => [...prev, `[${new Date().toLocaleTimeString()}] NEURAL_FAULT: Could not parse AI response as JSON.`].slice(-100));
+      }
+    } catch (err: any) {
+      console.error(err);
+      setLogs(prev => [...prev, `[${new Date().toLocaleTimeString()}] NEURAL_FAULT: ${err.message}`].slice(-100));
+    }
   };
 
   return (

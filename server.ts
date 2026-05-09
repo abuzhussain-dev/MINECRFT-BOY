@@ -5,7 +5,6 @@ import { createServer as createViteServer } from "vite";
 import path from "path";
 import { fileURLToPath } from "url";
 import mineflayer from "mineflayer";
-import { GoogleGenerativeAI } from "@google/genai";
 import { pathfinder, Movements, goals } from "mineflayer-pathfinder";
 import collectBlock from "mineflayer-collectblock";
 import minecraftData from "minecraft-data";
@@ -45,10 +44,6 @@ async function startServer() {
       xp: bot.experience,
     });
   };
-
-  // Gemini Integration
-  const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
-  const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
   io.on("connection", (socket) => {
     socket.emit("bot:logs", botLogs);
@@ -117,57 +112,32 @@ async function startServer() {
       if (bot) bot.chat(message);
     });
 
-    socket.on("bot:ai-command", async (instruction: string) => {
+    socket.on("bot:action", (cmd: any) => {
       if (!bot) return;
+      const mcData = minecraftData(bot.version);
+      
+      addLog(`EXECUTING_SUBROUTINE: ${JSON.stringify(cmd)}`);
 
-      addLog(`NEURAL_PROCESSING: "${instruction}"`);
-
-      try {
-        const mcData = minecraftData(bot.version);
-        const prompt = `You are a Minecraft Bot Controller. Translate instructions into JSON actions.
-        Instruction: "${instruction}"
-        Bot Position: ${JSON.stringify(bot.entity.position)}
-        
-        Supported actions:
-        1. { "action": "goto", "x": number, "y": number, "z": number }
-        2. { "action": "mine", "block": "block_name", "count": number }
-        3. { "action": "chat", "message": "string" }
-        4. { "action": "stop" }
-        
-        Return ONLY valid JSON.`;
-
-        const result = await model.generateContent(prompt);
-        const responseText = result.response.text();
-        const jsonMatch = responseText.match(/\{.*\}/s);
-
-        if (jsonMatch) {
-          const cmd = JSON.parse(jsonMatch[0]);
-          addLog(`EXECUTING_SUBROUTINE: ${JSON.stringify(cmd)}`);
-
-          if (cmd.action === "goto") {
-            bot.pathfinder.setGoal(new goals.GoalBlock(cmd.x, cmd.y, cmd.z));
-          } else if (cmd.action === "mine") {
-            const blockType = mcData.blocksByName[cmd.block];
-            if (blockType) {
-              const blocks = bot.findBlocks({
-                matching: blockType.id,
-                maxDistance: 64,
-                count: cmd.count || 1
-              });
-              if (blocks.length > 0) {
-                bot.collectBlock.collect(bot.blockAt(blocks[0]));
-              } else {
-                addLog(`RESOURCE_NOT_FOUND: ${cmd.block}`);
-              }
-            }
-          } else if (cmd.action === "stop") {
-            bot.pathfinder.setGoal(null);
-          } else if (cmd.action === "chat") {
-            bot.chat(cmd.message);
+      if (cmd.action === "goto") {
+        bot.pathfinder.setGoal(new goals.GoalBlock(cmd.x, cmd.y, cmd.z));
+      } else if (cmd.action === "mine") {
+        const blockType = mcData.blocksByName[cmd.block];
+        if (blockType) {
+          const blocks = bot.findBlocks({
+            matching: blockType.id,
+            maxDistance: 64,
+            count: cmd.count || 1
+          });
+          if (blocks.length > 0) {
+            bot.collectBlock.collect(bot.blockAt(blocks[0]));
+          } else {
+            addLog(`RESOURCE_NOT_FOUND: ${cmd.block}`);
           }
         }
-      } catch (err: any) {
-        addLog(`NEURAL_FAULT: ${err.message}`);
+      } else if (cmd.action === "stop") {
+        bot.pathfinder.setGoal(null);
+      } else if (cmd.action === "chat") {
+        bot.chat(cmd.message);
       }
     });
   });
